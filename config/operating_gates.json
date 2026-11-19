@@ -1,14 +1,14 @@
 {
   "_huong_dan": "Cổng kinh doanh, vận hành, pháp lý mà trợ lý PHẢI tuân theo. Bàn điền ở vòng 1, chốt bằng python3 -m lab10.checkpoint, rồi được sửa tiếp ở vòng 2. null = chưa đặt cổng này. Giải thích từng dòng: docs/guide.md, mục Cổng trong config (#ban-do).",
   "business": {
-    "_ly_do": "Lý do từng số: Phiếu B mục B7.4.",
+    "_ly_do": "Lý do từng số: Phiếu B mục B7.4. Vòng 2 (thẻ S4): pilot_scope bỏ kho DN (kho đắt nhất ngày 11.11, 7568đ/ticket), ticket DN về CSKH làm tay — Phiếu C mục C7, C12.",
     "daily_refund_cap_vnd": 1000000,
     "cost_budget_per_ticket_vnd": 1500,
-    "pilot_scope": {"mode": "all", "warehouses": [], "percent": 100},
+    "pilot_scope": {"mode": "warehouse", "warehouses": ["CT", "HCM", "HN"], "percent": 100},
     "roi_min": 0.5
   },
   "operations": {
-    "_ly_do": "Lý do từng số: Phiếu B mục B7.5 (runbook 1–3) và B7.6 (giờ cao điểm).",
+    "_ly_do": "Lý do từng số: Phiếu B mục B7.5 (runbook 1–3) và B7.6 (giờ cao điểm). Vòng 2 đã thử 2 người trực: hết ùn nhưng chi phí 7296đ/ticket > 6000, ROI 0.37 < 0.5 nên giữ 1 người + thu hẹp phạm vi; người thứ 2 chỉ gọi theo điều kiện dừng 4 (Phiếu C mục C7, C11).",
     "pic": "NV-TUNG",
     "approver_id": "NV-HANH",
     "reviewers_on_shift": 1,
@@ -17,9 +17,9 @@
     "stop_conditions": [
       "Khi có 1 lỗi ghi oan cho hãng thì tắt file_carrier_fault và notify_carrier (switches.json), chuyển ghi lỗi hãng về người",
       "Khi có 1 lần lộ tên, số điện thoại hoặc địa chỉ người nhận cho hãng thì tắt notify_carrier ngay trong ca",
-      "Khi tổng tiền hoàn sai trong ngày > 0đ hoặc tổng hoàn tự động chạm 1.000.000đ thì tắt issue_refund, ticket còn lại chuyển NV-HANH",
-      "Khi có ca chờ người duyệt quá 45 phút hoặc 1 ca bị ùn thì gọi thêm 1 người trực; quá 60 phút thì thu hẹp pilot_scope",
-      "Khi nhà cung cấp LLM lỗi 429 liên tục quá 15 phút thì tắt issue_refund, chuyển toàn bộ ticket về CSKH làm tay"
+      "Khi tổng tiền hoàn sai trong ngày > 0đ hoặc tổng hoàn tự động chạm ngân sách ngày (mức nhỏ hơn giữa 1.000.000đ và ngân sách Finance chốt cho hôm nay, ví dụ 300.000đ ngày 11.11) thì tắt issue_refund, ticket còn lại chuyển NV-HANH",
+      "Khi có ca chờ người duyệt quá 45 phút hoặc 1 ca bị ùn thì gọi thêm 1 người trực; quá 60 phút thì thu hẹp pilot_scope; khi monitor peak_hour_review_load > 11 ca trong 60 phút thì gọi người thứ 2 trước khi hàng chờ vượt 45 phút (đo trên S4 với 1 người: 11 ca → chờ lâu nhất 42 phút, 14–16 ca → 78–86 phút và có ca ùn)",
+      "Khi nhà cung cấp LLM lỗi 429 liên tục quá 15 phút thì tắt issue_refund, chuyển toàn bộ ticket về CSKH làm tay; monitor llm_fail_open_rate > 0 là tín hiệu sớm"
     ],
     "alert_channel": "Nhóm Zalo 'LogiX Pilot Hoàn tiền' + gọi điện cho NV-TUNG",
     "decision_note": true,

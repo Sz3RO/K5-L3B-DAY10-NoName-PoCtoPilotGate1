@@ -1,12 +1,16 @@
 {
-  "team": "",
-  "members": [],
-  "incident": "",
-  "decision_v1": "",
-  "decision_v2": "",
+  "team": "K5-L3B-DAY10-NoName-PoCtoPilotGate1",
+  "members": [
+    "VuVanTruong-2A202603910",
+    "LeHuyAnh-2A202603786",
+    "TranThiNhai-2A202603911"
+  ],
+  "incident": "S4",
+  "decision_v1": "Tiếp tục",
+  "decision_v2": "Thu hẹp",
   "three_lines": {
-    "environment_assumption": "",
-    "reduce_or_prevent": "",
-    "measure_in_pilot": ""
+    "environment_assumption": "Ở ba kho còn trong phạm vi (CT, HCM, HN), ca cần người duyệt ngày sale không dồn quá khoảng 11 ca trong 60 phút đông nhất, nên một mình NV-HANH (10 phút/ca) vẫn duyệt kịp trong 45 phút; trên S4 đúng 11 ca đó đã cho chờ lâu nhất 42 phút, và đợt sale ngày mai có thể dồn hơn.",
+    "reduce_or_prevent": "G7 cùng G1/G4 NGĂN được hoàn tự động vượt ngân sách ngày và hoàn sai / ghi lỗi oan khi LLM lỗi, vì mọi lệnh ghi đều qua write_gate và so với tracking DB và ops_limits (với điều kiện Finance ghi ngân sách vào ops_limits); còn hàng chờ thì thu hẹp phạm vi và monitor peak_hour_review_load chỉ GIẢM khả năng ùn, không ngăn được nếu ticket dồn nhiều hơn sức duyệt.",
+    "measure_in_pilot": "Phân bố giờ tới thật của ca vỡ/thất lạc ngày sale và số ca NV-HANH duyệt được mỗi giờ thật (mock giả định 6 ca/giờ), tỉ lệ lỗi 429 thật của nhà cung cấp LLM, và chi phí làm tay thật của kho DN sau khi bị cắt về CSKH."
   }
 }

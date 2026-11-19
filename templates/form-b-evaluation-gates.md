@@ -379,6 +379,9 @@ Lượng ticket có thể dồn gấp ba trong một giờ (ngày sale, sau bão
 | Ngưỡng nào thì **gọi thêm người** (hàng chờ bao nhiêu ca, chờ lâu nhất bao nhiêu phút)? Ai gọi? | Hàng chờ ≥ 4 ca hoặc chờ lâu nhất ≥ 30 phút → NV-TUNG báo người dự phòng; chờ lâu nhất > 45 phút (`max_queue_wait_minutes`) hoặc có 1 ca bị ùn → NV-TUNG gọi thêm 1 người vào trực (khi đó sửa `reviewers_on_shift = 2`, công suất 12 ca/giờ). |
 | Ngưỡng nào thì **thu hẹp** phạm vi (khoá `business.pilot_scope`) hoặc **tắt** một thao tác ghi (`config/switches.json`)? Ai quyết? | Đã có 2 người mà chờ vẫn > 60 phút (SLA `review_sla_minutes`) → thu hẹp `pilot_scope` về kho đạt hoặc `percent` 50; LLM 429 liên tục > 15 phút → tắt `issue_refund`; tổng hoàn tự động chạm 1.000.000đ → tắt `issue_refund`. NV-TUNG quyết và bấm. |
 | Thêm người thì chi phí mỗi ticket và ROI thay đổi thế nào (đọc report)? | Mỗi người trực thêm tốn 30.000đ phí giữ chỗ một ca (`reviewer_standby_fee_vnd`). Với 22 ticket/ca, thêm 1 người làm chi phí tăng ≈ 30.000 / 22 ≈ 1.360đ mỗi ticket và ROI giảm tương ứng; ngày cao điểm ≈ 66 ticket thì chỉ tăng ≈ 455đ/ticket. Số thật đọc ở khối "kinh doanh và vận hành" của report sau khi chạy lại với `reviewers_on_shift = 2`; nếu chi phí > 6.000đ/ticket thì thu hẹp phạm vi thay vì thêm người. |
+| **[Vòng 2 · S4]** Giờ cao điểm thật đo được là bao nhiêu? | Ngày 11.11 (gói S4) có 41 ticket; 15 ca vỡ/thất lạc tới trong phút 215–292 (cùng 1 ca kiểm lại là 16 ca vào hàng chờ). Monitor `peak_hour_review_load`: 16 ca trong 60 phút đông nhất, ở đủ phạm vi sau G7 (bộ nền: 1). Sau khi bỏ kho DN còn 11 ca. Mốc prepared, 1 người: 5 ca ùn, chờ lâu nhất 82 phút (`R-S4-prepared-20261119-164648-c59c91`). |
+| **[Vòng 2 · S4]** Thêm người thì số thật ra sao? | 2 người (12 ca/giờ): hết ùn, chờ lâu nhất 15 phút, nhưng 7.296đ/ticket > 6.000đ và ROI 0,37 < 0,5 (`R-S4-after-20261119-165229-27c7e9`). Ước tính 455đ/ticket ở trên là sai: phần đắt nhất là công duyệt 10.000đ cho mỗi ca chuyển người (22 ca), không phải phí giữ chỗ. Đúng như dòng trên, bàn **thu hẹp** (bỏ kho DN) thay vì thêm người: 1 người, 0 ca ùn, chờ lâu nhất 42 phút, 5.608đ, ROI 0,78 (`R-S4-after-20261119-170556-5b35f2`). |
+| **[Vòng 2 · S4]** Ngưỡng gọi người / thu hẹp / tắt cập nhật | Gọi người thứ 2: thêm tín hiệu **trước**, `peak_hour_review_load` > 11 ca/60 phút (vàng > 8; hiệu chỉnh từ S4: 11 ca → chờ 42 phút, 14–16 ca → 78–86 phút), bên cạnh "chờ > 45 phút". Thu hẹp: giữ như trên; ngày 11.11 đã thu hẹp sẵn về CT, HCM, HN. Tắt `issue_refund`: khi tổng hoàn tự động chạm **ngân sách của hôm đó** = min(1.000.000đ, ngân sách Finance trong `ops_limits`), ngày 11.11 là 300.000đ (G7 chuyển phần vượt cho NV-HANH); LLM 429 > 15 phút (vàng: `llm_fail_open_rate` > 0). NV-TUNG quyết. Chi tiết: Phiếu C mục C7, C11. |
 
 ---
 
@@ -418,7 +421,7 @@ bao nhiêu thời gian? (3) Có phần nào của dự án không nên làm ti�
 | Nếu Dừng: bài học ghi lại | Không áp dụng. |
 | Một bằng chứng còn thiếu (thứ bộ nền chưa đo được) | Bộ nền chỉ có 22 ticket, không có ca LLM lỗi 429 (đường `write_retry` / fail-open), không có ngày chính sách đổi (REFUND-v4 từ 01/12/2026), không có ngày cao điểm gấp ba, và trần 300.000đ/khách/ngày chưa có cổng code. Khoảng tin cậy [1,0; 1,0] chỉ nói về 22 ticket này; gói sự cố ở vòng 2 sẽ kiểm lại quyết định Tiếp tục. |
 | Ngày quyết định lại (trừ khi Dừng) | Ngay sau gói sự cố hôm nay (v2, Phiếu C mục C12); rà lại tiêu chí ngày 2026-11-30, trước khi REFUND-v4 có hiệu lực. |
-| PIC ký | |
+| PIC ký | Lê Huy Anh (Sản phẩm và kinh doanh, PIC nhóm việc 9 · Quyết định) · 2026-11-19 · Vũ Văn Trường (trưởng nhóm) ký thay theo uỷ quyền của Lê Huy Anh |
 
 Xong v1 thì lưu và đẩy một bản (sau mốc này không sửa cột v1):
 

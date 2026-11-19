@@ -87,6 +87,13 @@ def _strike_cap(ctx):
     return ctx.tools.ops_limits().get("max_auto_strikes_per_carrier_per_day")
 
 
+def _daily_auto_budget(ctx):
+    caps = [ctx.tools.ops_limits().get("daily_auto_refund_budget_vnd"),
+            (ctx.gates.get("business") or {}).get("daily_refund_cap_vnd")]
+    caps = [c for c in caps if c is not None]
+    return min(caps) if caps else None
+
+
 def _last(ctx, kind):
     return next((e for e in reversed(ctx.events) if e.get("type") == kind), {})
 
@@ -148,6 +155,15 @@ def _gate_refund(ctx, action):
     if final > pol["auto_limit_vnd"] and not aid:
         ctx.log("refund_escalated", gate="G3", why="vượt hạn mức tự động", amount=final, limit=pol["auto_limit_vnd"])
         return Verdict.escalate(f"khoản hoàn {final}đ vượt hạn mức tự động {pol['auto_limit_vnd']}đ, chưa có phê duyệt")
+    # G7 · ngân sách hoàn tự động trong ngày = trần nhỏ hơn giữa config của bàn và mức Finance chốt cho hôm nay
+    #      (ops_limits đổi theo ngày, ví dụ ngày sale), phần vượt phải có người duyệt
+    if not aid:
+        budget = _daily_auto_budget(ctx)
+        today = ctx.tools.auto_refund_today_vnd()
+        if budget is not None and today + final > budget:
+            ctx.log("refund_escalated", gate="G7", why="vượt ngân sách hoàn tự động trong ngày",
+                    today=today, asked=final, budget=budget)
+            return Verdict.escalate(f"tổng hoàn tự động hôm nay {today}đ + {final}đ vượt ngân sách {budget}đ: chờ người duyệt")
     cap = _strike_cap(ctx)
     will_fault = _last(ctx, "proposal").get("do_fault") and H.carrier_at_fault(pol, parcel, delay)
     if will_fault and cap is not None and _strikes_today(ctx, parcel["carrier_id"]) >= cap:
